@@ -1,3 +1,6 @@
 [submodule "third_party/GOCor"]
 	path = third_party/GOCor
 	url = https://github.com/PruneTruong/GOCor
+[submodule "label_propagation/davis2017-evaluation"]
+	path = label_propagation/davis2017-evaluation
+	url = https://github.com/davisvideochallenge/davis2017-evaluation
