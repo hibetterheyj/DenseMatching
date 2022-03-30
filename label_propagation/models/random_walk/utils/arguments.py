@@ -2,7 +2,7 @@ import argparse
 import os
 import torch
 import random
-import models.competitors.random_walk.utils as utils
+import dense_matching.label_propagation.models.random_walk.utils as utils
 
 def common_args(parser):
     return parser
@@ -55,6 +55,7 @@ def test_args():
     parser.add_argument('--pca-vis', default=False, action='store_true')
 
     # Model Details
+    parser.add_argument('--model-type', default='scratch', type=str, help='scratch | imagenet | moco')
     subprasers = parser.add_subparsers(dest='network_type')
     CRW = subprasers.add_parser('CRW', help='inference parameters for PDCNet')
     CRW.add_argument('--model-type', default='scratch', type=str)
@@ -112,7 +113,7 @@ def train_args():
     parser.add_argument('--partial-reload', default='', help='reload net from checkpoint, ignoring keys that are not in current model')
     parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
                         help='start epoch')
-    
+
     parser.add_argument( "--cache-dataset", dest="cache_dataset", help="Cache the datasets for quicker initialization. It also serializes the transforms", action="store_true", )
     parser.add_argument( "--data-parallel", dest="data_parallel", help="", action="store_true", )
     parser.add_argument( "--fast-test", dest="fast_test", help="", action="store_true", )
@@ -160,7 +161,7 @@ def train_args():
 
     if args.output_dir == 'auto':
         keys = {
-            'dropout':'drop', 'clip_len': 'len', 'frame_transforms': 'ftrans', 'frame_aug':'faug', 
+            'dropout':'drop', 'clip_len': 'len', 'frame_transforms': 'ftrans', 'frame_aug':'faug',
             'optim':'optim', 'temp':'temp', 'featdrop':'fdrop', 'lr':'lr', 'head_depth':'mlp'
         }
         name = '-'.join(["%s%s" % (keys[k], getattr(args, k) if not isinstance(getattr(args, k), list) else '-'.join([str(s) for s in getattr(args, k)])) for k in keys])

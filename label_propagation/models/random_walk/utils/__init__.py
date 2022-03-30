@@ -218,7 +218,7 @@ def mkdir(path):
 from torch import nn
 from torch.nn import functional as F
 from torchvision import transforms
-import models.competitors.random_walk.resnet as resnet
+import dense_matching.label_propagation.models.random_walk.resnet as resnet
 
 
 def partial_load(pretrained_dict, model, skip_keys=[]):
@@ -227,7 +227,7 @@ def partial_load(pretrained_dict, model, skip_keys=[]):
     # 1. filter out unnecessary keys
     filtered_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict and not any([sk in k for sk in skip_keys])}
     skipped_keys = [k for k in pretrained_dict if k not in filtered_dict]
-    
+
     # 2. overwrite entries in the existing state dict
     model_dict.update(filtered_dict)
 
@@ -247,7 +247,7 @@ def load_vince_model(path):
 def load_tc_model():
     path = 'tc_checkpoint.pth.tar'
     model_state = torch.load(path, map_location='cpu')['state_dict']
-    
+
     net = resnet.resnet50()
     net_state = net.state_dict()
 
@@ -257,7 +257,7 @@ def load_tc_model():
         if net_state[kk].shape != model_state[k].shape and net_state[kk].dim() == 4 and model_state[k].dim() == 5:
             tmp = model_state[k].squeeze(2)
         net_state[kk][:] = tmp[:]
-        
+
     net.load_state_dict(net_state)
 
     return net
@@ -279,7 +279,7 @@ class From3D(nn.Module):
         super(From3D, self).__init__()
         self.model = resnet
         self.is_3d = True
-    
+
     def forward(self, x, **kwargs):
         N, C, T, h, w = x.shape
         xx = x.permute(0, 2, 1, 3, 4).contiguous().view(-1, C, h, w)
@@ -316,7 +316,7 @@ def make_encoder(args):
     elif model_type == 'uvc':
         net = load_uvc_model()
 
-    else: 
+    else:
         assert False, 'invalid args.model_type'
 
     if hasattr(net, 'modify'):
@@ -330,7 +330,7 @@ def make_encoder(args):
 
 class MaskedAttention(nn.Module):
     '''
-    A module that implements masked attention based on spatial locality 
+    A module that implements masked attention based on spatial locality
     TODO implement in a more efficient way (torch sparse or correlation filter)
     '''
     def __init__(self, radius, flat=True):
@@ -354,7 +354,7 @@ class MaskedAttention(nn.Module):
         if self.flat:
             H = int(H**0.5)
             W = int(W**0.5)
-        
+
         gx, gy = torch.meshgrid(torch.arange(0, H), torch.arange(0, W))
         D = ( (gx[None, None, :, :] - gx[:, :, None, None])**2 + (gy[None, None, :, :] - gy[:, :, None, None])**2 ).float() ** 0.5
         D = (D < self.radius)[None].float()
@@ -375,7 +375,7 @@ class MaskedAttention(nn.Module):
         self.index['%s-%s' %(H,W)] = idx
 
         return idx
-        
+
     def forward(self, x):
         H, W = x.shape[-2:]
         sid = '%s-%s' % (H,W)
@@ -391,13 +391,13 @@ class MaskedAttention(nn.Module):
 
 def sinkhorn_knopp(A, tol=0.01, max_iter=1000, verbose=False):
     _iter = 0
-    
+
     if A.ndim > 2:
         A = A / A.sum(-1).sum(-1)[:, None, None]
     else:
         A = A / A.sum(-1).sum(-1)[None, None]
 
-    A1 = A2 = A 
+    A1 = A2 = A
 
     while (A2.sum(-2).std() > tol and _iter < max_iter) or _iter == 0:
         A1 = F.normalize(A2, p=1, dim=-2)
@@ -411,7 +411,7 @@ def sinkhorn_knopp(A, tol=0.01, max_iter=1000, verbose=False):
     if verbose:
         print('------------row/col sums aft', A2.sum(-1).std().item(), A2.sum(-2).std().item())
 
-    return A2 
+    return A2
 
 def to_numpy(tensor):
     if torch.is_tensor(tensor):

@@ -4,7 +4,7 @@ import torch.nn.functional as F
 import torchvision
 
 import numpy as np
-import models.competitors.random_walk.utils as utils
+import dense_matching.label_propagation.models.random_walk.utils as utils
 
 EPS = 1e-20
 
@@ -64,7 +64,7 @@ class CRW(nn.Module):
         #     A = self.restrict(A)
 
         return A.squeeze(1) if in_t_dim < 4 else A
-    
+
     def stoch_mat(self, A, zero_diagonal=False, do_dropout=True, do_sinkhorn=False):
         ''' Affinity -> Stochastic Matrix '''
 
@@ -75,14 +75,14 @@ class CRW(nn.Module):
             A[torch.rand_like(A) < self.edgedrop_rate] = -1e20
 
         if do_sinkhorn:
-            return utils.sinkhorn_knopp((A/self.temperature).exp(), 
+            return utils.sinkhorn_knopp((A/self.temperature).exp(),
                 tol=0.01, max_iter=100, verbose=False)
 
         return F.softmax(A/self.temperature, dim=-1)
 
     def pixels_to_nodes(self, x):
-        ''' 
-            pixel maps -> node embeddings 
+        '''
+            pixel maps -> node embeddings
             Handles cases where input is a list of patches of images (N>1), or list of whole images (N=1)
 
             Inputs:
@@ -107,7 +107,7 @@ class CRW(nn.Module):
         feats = maps.sum(-1).sum(-1) / (H*W)
         feats = self.selfsim_fc(feats.transpose(-1, -2)).transpose(-1,-2)
         feats = F.normalize(feats, p=2, dim=1)
-    
+
         feats = feats.view(B, N, feats.shape[1], T).permute(0, 2, 3, 1)
         maps  =  maps.view(B, N, *maps.shape[1:])
 
@@ -121,9 +121,9 @@ class CRW(nn.Module):
         '''
         B, T, C, H, W = x.shape
         _N, C = C//3, 3
-    
+
         #################################################################
-        # Pixels to Nodes 
+        # Pixels to Nodes
         #################################################################
         x = x.transpose(1, 2).view(B, _N, C, T, H, W)
         q, mm = self.pixels_to_nodes(x)
@@ -134,14 +134,14 @@ class CRW(nn.Module):
             return (q, mm) if _N > 1 else (q, q.view(*q.shape[:-1], h, w))
 
         #################################################################
-        # Compute walks 
+        # Compute walks
         #################################################################
         walks = dict()
         As = self.affinity(q[:, :, :-1], q[:, :, 1:])
         A12s = [self.stoch_mat(As[:, i], do_dropout=True) for i in range(T-1)]
 
         #################################################### Palindromes
-        if not self.sk_targets:  
+        if not self.sk_targets:
             A21s = [self.stoch_mat(As[:, i].transpose(-1, -2), do_dropout=True) for i in range(T-1)]
             AAs = []
             for i in list(range(1, len(A12s))):
@@ -151,12 +151,12 @@ class CRW(nn.Module):
                     aar, aal = aar @ _a, _a @ aal
 
                 AAs.append((f"l{i}", aal) if self.flip else (f"r{i}", aar))
-    
+
             for i, aa in AAs:
                 walks[f"cyc {i}"] = [aa, self.xent_targets(aa)]
 
         #################################################### Sinkhorn-Knopp Target (experimental)
-        else:   
+        else:
             a12, at = A12s[0], self.stoch_mat(A[:, 0], do_dropout=False, do_sinkhorn=True)
             for i in range(1, len(A12s)):
                 a12 = a12 @ A12s[i]
@@ -166,7 +166,7 @@ class CRW(nn.Module):
                 walks[f"sk {i}"] = [a12, targets]
 
         #################################################################
-        # Compute loss 
+        # Compute loss
         #################################################################
         xents = [torch.tensor([0.]).to(self.args.device)]
         diags = dict()
@@ -189,7 +189,7 @@ class CRW(nn.Module):
                     self.visualize_patches(x, q)
 
         loss = sum(xents)/max(1, len(xents)-1)
-        
+
         return q, loss, diags
 
     def xent_targets(self, A):
