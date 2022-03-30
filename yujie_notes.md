@@ -2,9 +2,9 @@
 
 ## TODO
 
-- [ ] add code for different versions of cupy functions used in `correlation.py`
+- [x] add code for different versions of cupy functions used in `correlation.py`
   ref: <https://github.com/cupy/cupy/commit/45ab6e375adc020418f08f4c53d8c8891fc5876e>
-- [ ] missing dependance of `timm`
+- [x] mention missing dependance of `timm`
 - [ ] modify `euler_wrapper.prepare_data` to use no limited to euler cluster
 
 ## installation

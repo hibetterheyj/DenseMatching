@@ -3,7 +3,6 @@ import torch
 import cupy
 import re
 
-
 class Stream:
     ptr = torch.cuda.current_stream().cuda_stream
 
@@ -270,10 +269,16 @@ def cupy_kernel(strFunction, objectVariables):
 
     return strKernel
 
-
-@cupy.util.memoize(for_each_device=True)
-def cupy_launch(strFunction, strKernel):
-    return cupy.cuda.compile_with_cache(strKernel).get_function(strFunction)
+from packaging import version
+cupy_ver = cupy.__version__
+if version.parse(cupy.__version__) >= version.parse('9.0.0'):
+    @cupy.memoize(for_each_device=True)
+    def cupy_launch(strFunction, strKernel):
+        return cupy.cuda.compile_with_cache(strKernel).get_function(strFunction)
+else:
+    @cupy.util.memoize(for_each_device=True)
+    def cupy_launch(strFunction, strKernel):
+        return cupy.cuda.compile_with_cache(strKernel).get_function(strFunction)
 
 
 class _FunctionCorrelation(torch.autograd.Function):
