@@ -12,10 +12,14 @@ if env_path not in sys.path:
     sys.path.append(env_path)
 import dense_matching.admin.settings as ws_settings
 from dense_matching.label_propagation.models.random_walk.model import CRW
-from dense_matching.label_propagation.models.random_walk.utils.arguments import test_args
+from dense_matching.label_propagation.models.random_walk.utils.arguments import (
+    test_args,
+)
 from dense_matching.label_propagation.models.random_walk import utils as utils
 from dense_matching.label_propagation.dataset import vos, jhmdb
-from dense_matching.label_propagation.validation.feature_backbone_evaluation import test_utils as test_utils
+from dense_matching.label_propagation.validation.feature_backbone_evaluation import (
+    test_utils as test_utils,
+)
 from dense_matching.utils_data.euler_wrapper import prepare_data
 from dense_matching.label_propagation.models.random_walk import resnet as resnet
 from dense_matching.label_propagation.models.random_walk.utils import From3D
@@ -183,11 +187,19 @@ def main(args, vis, settings):
         os.makedirs(args.save_path)
 
     # get dataset
-    prepare_data(settings.env.davis_tar, 'euler')
+    # TODO: make it work in local machine
+    # euler
+    # prepare_data(settings.env.davis_tar, 'euler')
+
     # pre-processing of the images is done within the dataset
-    dataset = (vos.VOSDataset if not 'jhmdb' in args.filelist else jhmdb.JhmdbSet)(
-        root=settings.env.davis, args=args
-    )
+    # dataset = (vos.VOSDataset if not 'jhmdb' in args.filelist else jhmdb.JhmdbSet)(
+    #     root=settings.env.davis, args=args
+    # )
+    if not 'jhmdb' in args.filelist:
+        dataset = vos.VOSDataset(root=settings.env.davis, args=args)
+    else:
+        dataset = jhmdb.JhmdbSet(args=args)
+
     val_loader = torch.utils.data.DataLoader(
         dataset,
         batch_size=int(args.batchSize),
