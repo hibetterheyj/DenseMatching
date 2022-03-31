@@ -54,12 +54,12 @@ def test(
 
     # outfolder = f"{outdir}/{model_name}"
     # save_path_images = f"{outdir}/{model_name}/results_{model_name}/"
-    # out_folder = f"{outdir}/{model_name}/converted_{model_name}/"
+    # converted_folder = f"{outdir}/{model_name}/converted_{model_name}/"
     # outfile = f"{outdir}/{model_name}/{model_name}-global_results-val.csv"
     # online_str = '_online' if '--finetune' in opts else ''
     outfolder = os.path.join(outdir, model_name)
-    save_path_images = os.path.join(outfolder, "results_" + model_name)
-    out_folder = os.path.join(outfolder, "converted_" + model_name)
+    save_path_images = os.path.join(outfolder, "result_images")
+    converted_folder = os.path.join(outfolder, "converted_" + model_name)
     outfile = os.path.join(outfolder, model_name + "-global_results-val.csv")
 
     if not os.path.isfile(outfile) or force:
@@ -76,10 +76,10 @@ def test(
             cmd += " && "
 
         convert_str = f"python validation/feature_backbone_evaluation/convert_davis.py --in_folder {save_path_images} \
-                --out_folder {out_folder} --dataset {datapath}"
+                --converted_folder {converted_folder} --dataset {datapath}"
 
         eval_str = f"python {davis2017path}/evaluation_method.py --task semi-supervised \
-                --results_path  {out_folder}/ --set val --davis_path {datapath} --name {model_name}"
+                --results_path  {converted_folder}/ --set val --davis_path {datapath} --name {model_name}"
 
         cmd += f" {convert_str} && {eval_str}"
         print(cmd)
