@@ -37,17 +37,7 @@ wget https://github.com/ajabri/videowalk/raw/master/pretrained.pth
 python eval_label_propagation.py --model CRW --resume ./pretrained.pth --save_dir  ./results
 
 # generate command
-python validation/feature_backbone_evaluation/eval_label_propagation.py --filelist validation/feature_backbone_evaluation/davis_vallist.txt --model CRW --resume ./pretrained.pth --topk 10 --radius 12  --cropSize -1 --videoLen 20 --temperature 0.07 --save-path ./results/CRW_L20_K10_T0.07_R12_crop-1/results_CRW_L20_K10_T0.07_R12_crop-1
-```
-
-#### current results
-
-```shell
-Traceback (most recent call last):
-  File "validation/feature_backbone_evaluation/eval_label_propagation.py", line 398, in <module>
-    main(args, vis, settings)
-  File "validation/feature_backbone_evaluation/eval_label_propagation.py", line 186, in main
-    prepare_data(settings.env.davis_tar, 'euler')
+python validation/feature_backbone_evaluation/eval_label_propagation.py --filelist validation/feature_backbone_evaluation/davis_vallist.txt --model CRW --resume ./pretrained.pth --topk 10 --radius 12  --cropSize -1 --videoLen 20 --temperature 0.07 --save-path ./results/CRW_L20_K10_T0.07_R12_crop-1
 ```
 
 #### generated commands

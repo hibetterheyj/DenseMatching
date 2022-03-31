@@ -32,7 +32,8 @@ def create_default_local_file():
         'training_cad_520': empty_str,
         'validation_cad_520': empty_str,
         'coco': empty_str,
-        'megadepth_training': empty_str
+        'megadepth_training': empty_str,
+        'davis': empty_str
         })
 
     comment = {'workspace_dir': 'Base directory for saving network checkpoints.',

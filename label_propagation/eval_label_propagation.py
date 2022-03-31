@@ -35,7 +35,11 @@ def test(
     # davis2017path = os.path.join(os.environ["HOME"], 'davis2017-evaluation/')
     # davis dataset
     # TODO: modify according to pytracking!
-    datapath = '/home/he/data/davis'
+    # load according to host by using settngs!
+    # datapath = '/home/he/data/davis' # yujie_pc
+    datapath = settings.env.davis
+    if not os.path.isdir(datapath):
+        sys.exit("please config davis path (self.davis) in local.py")
     # davis eval toolkit
     davis2017path = './davis2017-evaluation/'
 
@@ -76,7 +80,7 @@ def test(
             cmd += " && "
 
         convert_str = f"python validation/feature_backbone_evaluation/convert_davis.py --in_folder {save_path_images} \
-                --converted_folder {converted_folder} --dataset {datapath}"
+                --out_folder {converted_folder} --dataset {datapath}"
 
         eval_str = f"python {davis2017path}/evaluation_method.py --task semi-supervised \
                 --results_path  {converted_folder}/ --set val --davis_path {datapath} --name {model_name}"
@@ -87,7 +91,7 @@ def test(
     if not dryrun:
         os.system(cmd)
     # copyfile(outfile, f"{outdir}/{model_name}.csv")
-    copyfile(outfile, os.path.join(outdir, model_name + '.csv'))
+    # copyfile(outfile, os.path.join(outdir, model_name + '.csv'))
 
 
 if __name__ == '__main__':
